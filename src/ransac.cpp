@@ -64,8 +64,8 @@ int main()
     // generate the data points
 
     unsigned int num_points = 100;
-    double mean = 0;
-    double stddev = 5;
+    double mean = 0.0;
+    double stddev = 5.0;
     std::vector<double> xs = matplot::randn(num_points, mean, stddev);
     std::vector<double> ys = matplot::randn(num_points, mean, stddev);
 
@@ -76,8 +76,16 @@ int main()
         zs.push_back(-(a * xs.at(i) + b * ys.at(i) + d) / c);
     }
 
+    // turn some data points into outliers
+    double outlier_ratio = 0.50;
+    unsigned int outlier_cnt = num_points * outlier_ratio;
+
+    for (unsigned int i = 0; i < outlier_cnt; ++i) {
+        zs.at(i) += matplot::rande(0.1);
+    }
+
     matplot::scatter3(xs, ys, zs, "filled");
-    matplot::zlim({-2, 2});
+    //matplot::zlim({-2, 2});
     matplot::show();
 
     return 0;
