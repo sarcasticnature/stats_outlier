@@ -30,7 +30,7 @@ int main()
     std::transform(zs.begin(), zs.end(), zs.begin(), mad_fn);
     std::nth_element(zs.begin(), zs.begin() + mid, zs.end());
     double mad = zs.at(mid);
-    std::cout << "Median absolute deviattion is: " << mad << std::endl;
+    std::cout << "Median absolute deviation is: " << mad << std::endl;
 
     double outlier_bound = 5 * mad;
     std::erase_if(xs, [&](double x) { return std::abs(x - median) > outlier_bound; });

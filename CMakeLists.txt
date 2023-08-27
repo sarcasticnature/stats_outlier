@@ -17,5 +17,5 @@ if(NOT matplotplusplus_POPULATED)
     add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-add_executable(demo src/main.cpp)
-target_link_libraries(demo PUBLIC matplot)
+add_executable(mad src/mad.cpp)
+target_link_libraries(mad PUBLIC matplot)
