@@ -19,3 +19,6 @@ endif()
 
 add_executable(mad src/mad.cpp)
 target_link_libraries(mad PUBLIC matplot)
+
+add_executable(ransac src/ransac.cpp)
+target_link_libraries(ransac PUBLIC matplot)
