@@ -4,19 +4,23 @@
 #include <cmath>
 //#include <algorithm>
 
+#include "Eigen/Dense"
+
 #include "matplot/matplot.h"
 
 // Represents a 3d vector with its tail at the origin
-struct Vec
-{
-    double x, y, z;
-};
+using Vec = Eigen::Vector3d;
+//struct Vec
+//{
+//    double x, y, z;
+//};
 
 // Represents a point in 3d space. Same implementation as a vector, but different semantic meaning
-struct Point
-{
-    double x, y, z;
-};
+using Point = Eigen::Vector3d;
+//struct Point
+//{
+//    double x, y, z;
+//};
 
 // Represents a plane in 3d space using the coefficients of the plane equation az + by + cz + d = 0
 struct Plane
@@ -26,27 +30,27 @@ struct Plane
 
 Plane computePlane(Vec v1, Vec v2, Point p)
 {
-    Vec v3;
-    v3.x = v1.y * v2.z - v1.z * v2.y;
-    v3.y = v1.z * v2.x - v1.x * v2.z;
-    v3.z = v1.x * v2.y - v1.y * v2.x;
+    Vec v = v1.cross(v2);
 
-    //std::cout << "Normal vec: x=" << v3.x << ", y=" << v3.y << ", z=" << v3.z << std::endl;
+    double d = -(v(0) * p(0) + v(1) * p(1) + v(2) * p(2));
 
-    const auto& [a, b, c] = v3;
-
-    double d = -(a * p.x + b * p.y + c * p.z);
-
-    return {a, b, c, d};
+    return {v(0), v(1), v(2), d};
 }
 
 double distanceFromPlane(Point point, Plane plane)
 {
     const auto& [a, b, c, d] = plane;
-    double num = std::abs(a * point.x + b * point.y + c * point.z + d);
+    double num = std::abs(a * point(0) + b * point(1) + c * point(2) + d);
     double denom = std::sqrt(a*a + b*b + c*c);
     return num / denom;
 }
+
+//// Fn for running the RANSAC alg.
+//// points: input data
+//// k: number of iterations
+//// t: inlier threshold
+//// d: minimum number of inliers to
+//Plane ransac(std::vector<Point> points, unsigned k, unsigned t, unsigned d)
 
 int main()
 {
@@ -63,7 +67,7 @@ int main()
 
     // generate the data points
 
-    unsigned int num_points = 100;
+    unsigned num_points = 100;
     double mean = 0.0;
     double stddev = 5.0;
     std::vector<double> xs = matplot::randn(num_points, mean, stddev);
@@ -78,15 +82,17 @@ int main()
 
     // turn some data points into outliers
     double outlier_ratio = 0.50;
-    unsigned int outlier_cnt = num_points * outlier_ratio;
+    unsigned outlier_cnt = num_points * outlier_ratio;
 
-    for (unsigned int i = 0; i < outlier_cnt; ++i) {
+    for (unsigned i = 0; i < outlier_cnt; ++i) {
         zs.at(i) += matplot::rande(0.1);
     }
 
     matplot::scatter3(xs, ys, zs, "filled");
     //matplot::zlim({-2, 2});
     matplot::show();
+
+    //Plane model = ransac(xs, ys, zs);
 
     return 0;
 }

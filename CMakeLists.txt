@@ -17,8 +17,10 @@ if(NOT matplotplusplus_POPULATED)
     add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+find_package(Eigen3 REQUIRED)
+
 add_executable(mad src/mad.cpp)
 target_link_libraries(mad PUBLIC matplot)
 
 add_executable(ransac src/ransac.cpp)
-target_link_libraries(ransac PUBLIC matplot)
+target_link_libraries(ransac PUBLIC matplot Eigen3::Eigen)
