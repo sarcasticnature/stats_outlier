@@ -110,13 +110,9 @@ std::optional<Plane> ransac(PointMatrix points, unsigned k, unsigned t, unsigned
     PointMatrix inliers;
     int inlier_cnt;
 
-    PointMatrix debug; // TODO: remove after debugging
-
     while (k > 0) {
         auto [fst, snd, thrd] = pick3(0, num_points - 1);
         model = computePlanePoints(points.row(fst), points.row(snd), points.row(thrd));
-        // Copy the points into the inlier set. Should be faster than allocating a new row
-        // and resizing (potentially) every iteration (I _think_)
         inliers.resize(0, 3);
 
         for (auto i = 0; i < num_points; ++i) {
@@ -135,12 +131,8 @@ std::optional<Plane> ransac(PointMatrix points, unsigned k, unsigned t, unsigned
             model = computePlaneNormal(normal, mean.transpose());
             inlier_cnt = 0;
 
-            debug.resize(0, 3);
-
             for (auto i = 0; i < num_points; ++i) {
                 if (distanceFromPlane(points.row(i), model) < t) {
-                    debug.conservativeResize(debug.rows() + 1, Eigen::NoChange);
-                    debug.bottomRows(1) = points.row(i);
                     ++inlier_cnt;
                 }
             }
