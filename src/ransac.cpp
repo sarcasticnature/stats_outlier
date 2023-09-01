@@ -80,6 +80,23 @@ PointMatrix zipPoints(std::vector<double> xs, std::vector<double> ys, std::vecto
     return mat;
 }
 
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+unzipPoints(PointMatrix points)
+{
+    std::vector<double> xs, ys, zs;
+    int num_points = points.rows();
+    xs.reserve(num_points);
+    ys.reserve(num_points);
+    zs.reserve(num_points);
+
+    for (int i = 0; i < num_points; ++i) {
+        xs.push_back(points.row(i)(0));
+        ys.push_back(points.row(i)(1));
+        zs.push_back(points.row(i)(2));
+    }
+    return {xs, ys, zs};
+}
+
 std::tuple<int, int, int> pick3(int min, int max)
 {
     return {matplot::randi(min, max), matplot::randi(min, max), matplot::randi(min, max)};
@@ -108,7 +125,6 @@ std::optional<Plane> ransac(PointMatrix points, unsigned k, unsigned t, unsigned
         inliers.resize(0, 3);
 
         for (auto i = 0; i < num_points; ++i) {
-            // setting the first element in a row to NaN to mark it as unused.
             if (distanceFromPlane(points.row(i), model) < t) {
                 inliers.conservativeResize(inliers.rows() + 1, Eigen::NoChange);
                 inliers.bottomRows(1) = points.row(i);
@@ -145,16 +161,16 @@ int main()
     // Set up the ground truth "ground plane"
 
     // xy plane at -10 z
-    //Vec v1 = {1, 0, 0};
-    //Vec v2 = {0, 1, 0};
-    //Point p = {0, 0, -10};
-    //Plane ground_plane = computePlaneVec(v1, v2, p);
+    Vec v1 = {1, 0, 0};
+    Vec v2 = {0, 1, 0};
+    Point p = {0, 0, -10};
+    Plane ground_plane = computePlaneVec(v1, v2, p);
 
     // rando plane
-    Point p1 = {1, 0, 0};
-    Point p2 = {0, 1, 0};
-    Point p3 = {0, 0, 1};
-    Plane ground_plane = computePlanePoints(p1, p2, p3);
+    //Point p1 = {1, 0, 0};
+    //Point p2 = {0, 1, 0};
+    //Point p3 = {0, 0, 1};
+    //Plane ground_plane = computePlanePoints(p1, p2, p3);
 
     const auto& [a, b, c, d] = ground_plane;
     std::cout << "coefficients of the *real* plane equation: a="
@@ -192,9 +208,6 @@ int main()
         zs.at(i) += matplot::rande(0.1);
     }
 
-    matplot::scatter3(xs, ys, zs, "filled");
-    matplot::show();
-
     PointMatrix point_mat = zipPoints(xs, ys, zs);
 
     // TODO: remove hardcoding? esp. given 0.1 doesn't match the actual outlier ratio
@@ -208,6 +221,50 @@ int main()
     std::cout << "Best model has coefficients: a="
               << model.a << ", b=" << model.b << ", c=" << model.c << ", d=" << model.d
               << std::endl;
+
+    // TODO: move this into its own function (or return the inliers from the ransac function)
+    PointMatrix inliers;
+    for (size_t i = 0; i < num_points; ++i) {
+        if (distanceFromPlane(point_mat.row(i), model) < 1.0) { // TODO: hardcoded `t` (1.0)
+            inliers.conservativeResize(inliers.rows() + 1, Eigen::NoChange);
+            inliers.bottomRows(1) = point_mat.row(i);
+        }
+    }
+
+    auto [xs_, ys_, zs_] = unzipPoints(inliers);
+
+    auto f = matplot::figure();
+    //f->width(1920);
+    //f->height(1080);
+
+    matplot::subplot(2, 2, 0);
+    matplot::scatter3(xs, ys, zs, "filled");
+    matplot::xlim({-20, 20});
+    matplot::ylim({-20, 20});
+    matplot::zlim({-10, 40});
+
+    matplot::subplot(2, 2, 1);
+    matplot::scatter3(xs, ys, zs, "filled");
+    matplot::view(-25, 0, 0);
+    matplot::xlim({-20, 20});
+    matplot::ylim({-20, 20});
+    matplot::zlim({-10, 40});
+
+    matplot::subplot(2, 2, 2);
+    matplot::scatter3(xs_, ys_, zs_, "filled");
+    matplot::view();
+    matplot::xlim({-20, 20});
+    matplot::ylim({-20, 20});
+    matplot::zlim({-10, 40});
+
+    matplot::subplot(2, 2, 3);
+    matplot::scatter3(xs_, ys_, zs_, "filled");
+    matplot::view(-25, 0, 0);
+    matplot::xlim({-20, 20});
+    matplot::ylim({-20, 20});
+    matplot::zlim({-10, 40});
+
+    matplot::show();
 
     return 0;
 }
