@@ -12,17 +12,9 @@
 
 // Represents a 3d vector with its tail at the origin
 using Vec = Eigen::Vector3d;
-//struct Vec
-//{
-//    double x, y, z;
-//};
 
 // Represents a point in 3d space. Same implementation as a vector, but different semantic meaning
 using Point = Eigen::Vector3d;
-//struct Point
-//{
-//    double x, y, z;
-//};
 
 // Represents a nx3 matrix of points
 using PointMatrix = Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
@@ -151,18 +143,34 @@ std::optional<Plane> ransac(PointMatrix points, unsigned k, unsigned t, unsigned
 int main()
 {
     // Set up the ground truth "ground plane"
-    Vec v1 = {1, 0, 0};
-    Vec v2 = {0, 1, 0};
-    Point p = {0, 0, -10};
 
-    Plane ground_plane = computePlaneVec(v1, v2, p);
+    // xy plane at -10 z
+    //Vec v1 = {1, 0, 0};
+    //Vec v2 = {0, 1, 0};
+    //Point p = {0, 0, -10};
+    //Plane ground_plane = computePlaneVec(v1, v2, p);
+
+    // rando plane
+    Point p1 = {1, 0, 0};
+    Point p2 = {0, 1, 0};
+    Point p3 = {0, 0, 1};
+    Plane ground_plane = computePlanePoints(p1, p2, p3);
+
     const auto& [a, b, c, d] = ground_plane;
-
     std::cout << "coefficients of the *real* plane equation: a="
               << a << ", b=" << b << ", c=" << c << ", d=" << d << std::endl;
 
-    // generate the data points
+    Vec n = {a, b, c};
+    double norm = n.norm();
+    double a_ = a / norm;
+    double b_ = b / norm;
+    double c_ = c / norm;
+    double d_ = d / norm;
 
+    std::cout << "After normalizing the original plane normal vector, we get: "
+              << a_ << ", " << b_ << ", " << c_ << ", " << d_ << std::endl;
+
+    // generate the data points
     unsigned num_points = 100;
     double mean = 0.0;
     double stddev = 5.0;
@@ -185,12 +193,11 @@ int main()
     }
 
     matplot::scatter3(xs, ys, zs, "filled");
-    //matplot::zlim({-2, 2});
     matplot::show();
 
     PointMatrix point_mat = zipPoints(xs, ys, zs);
 
-    // TODO: remove hardcoding? esp. given 0.1 doesn't match the actual outlier ratio (0.5)
+    // TODO: remove hardcoding? esp. given 0.1 doesn't match the actual outlier ratio
     //unsigned k = std::log(1.0 - 0.99) / std::log(1 - std::pow(1 - .1, num_points));
     //std::cout << "k = " << k << std::endl;
     unsigned k = 10000;
@@ -198,7 +205,9 @@ int main()
     // TODO: futz with the parameters, esp. t & d
     auto model_opt = ransac(point_mat, k, 1.0, num_points / 5);
     Plane model = model_opt.value();
-    std::cout << "Best model has coefficients: a=" << model.a << ", b=" << model.b << ", c=" << model.c << ", d=" << model.d << std::endl;
+    std::cout << "Best model has coefficients: a="
+              << model.a << ", b=" << model.b << ", c=" << model.c << ", d=" << model.d
+              << std::endl;
 
     return 0;
 }
