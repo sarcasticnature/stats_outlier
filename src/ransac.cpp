@@ -234,9 +234,6 @@ int main()
     auto [xs_, ys_, zs_] = unzipPoints(inliers);
 
     auto f = matplot::figure();
-    //f->width(1920);
-    //f->height(1080);
-
     matplot::subplot(2, 2, 0);
     matplot::scatter3(xs, ys, zs, "filled");
     matplot::xlim({-20, 20});
@@ -264,6 +261,8 @@ int main()
     matplot::ylim({-20, 20});
     matplot::zlim({-10, 40});
 
+    f->width(1920);
+    f->height(1080);
     matplot::show();
 
     return 0;
